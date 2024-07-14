@@ -1,0 +1,30 @@
+﻿@page "/publish"
+
+<style>
+    .content {
+        margin-left: 5%;
+        margin-right: 15%;
+    }
+</style>
+
+<div class="content">
+
+@if (error != null)
+{
+    <MudAlert Severity="Severity.Error">@error</MudAlert>
+}
+
+<EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+    <DataAnnotationsValidator />
+    <MudCard>
+        <MudCardContent>
+            <MudTextField Label="Repository Name"
+                          @bind-Value="model.RepositoryName" For="@(() => model.RepositoryName)" InputType="InputType.Text" />
+            <MudCheckBox @bind-Value="model.AcceptedRules" Label="Accept rules of plugin policy."></MudCheckBox>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Disabled="@processing" Color="Color.Primary" Class="ml-auto">Publish</MudButton>
+        </MudCardActions>
+    </MudCard>
+</EditForm>
+</div>

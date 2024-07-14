@@ -1,0 +1,319 @@
+﻿@page "/plugin/{PluginID:int}"
+
+@rendermode InteractiveWebAssembly
+
+@using Humanizer
+@using Humanizer.Bytes
+@using PluginsWebsite.Core.Seeders
+@using PluginsWebsite.Core.Views
+@using static PluginsWebsite.Core.Seeders.CategorySeeder
+
+<style>
+    .content {
+        margin-left: 5%;
+        margin-right: 15%;
+    }
+
+    .plugins {
+        flex: 1;
+        padding-left: 15px;
+    }
+
+    .sidebar {
+        background-color: #262624;
+        height: 800px;
+        width: 25%;
+        max-width: 300px;
+        border-radius: 15px;
+    }
+
+    .category {
+        display: flex;
+        height: 35px;
+        width: 100%;
+    }
+
+    .plugin-title {
+        display: inline-block;
+        white-space: nowrap;
+        height: 32px;
+        font-size: 20px;
+    }
+
+    .plugin-desc {
+        overflow: hidden;
+        white-space: pre-line;
+        text-overflow: ellipsis;
+        height: 35%;
+        margin-left: 25px;
+    }
+
+    .plugin-tags {
+        text-overflow: ellipsis;
+        height: 16px;
+        margin-left: 25px;
+        margin-right: 25px;
+    }
+
+    .plugin-tag {
+        width: 350px;
+        margin-right: 5px;
+        border-radius: 15px;
+        display: inline;
+    }
+
+    .nwapi {
+        background: url(images/nwapi.png);
+        background-size: contain;
+    }
+
+    .exiled {
+        background: url(images/exiled.png);
+        background-size: contain;
+    }
+</style>
+
+<div class="content">
+    <MudGrid>
+        <MudItem xs="12">
+            <table style="width: 100%; height: 128px">
+                <tr>
+                    <th style="width: 128px" />
+                    <th style="width: 100%;" />
+                    <th style="width: 256px;" />
+                </tr>
+                <tr>
+                    <td>
+                        <div style="padding: 25px 0px 25px 25px;">
+                            <img style="border-radius: 15%" height="103px" width="103px" src="@Plugin.ImageURL" />
+                        </div>
+                    </td>
+                    <td>
+                        <div style="padding: 25px 0px 25px 25px;">
+                            <div style="background-color: #262624; border-radius: 15px 0px 0px 15px; height: 103px">
+                                <div class="plugin-title">
+                                    <h2 style="display: inline; margin-left: 25px;">@Plugin.Name</h2>
+                                    &nbsp; by&nbsp;
+                                    <a href="/author/@Plugin.AuthorName" style="display: inline; text-decoration: underline">@Plugin.AuthorName</a>
+                                </div>
+                                <div class="plugin-desc">
+                                    @Plugin.ShortDescription
+                                </div>
+                                <div class="plugin-tags">
+                                    @foreach (var loader in Plugin.Loaders)
+                                    {
+                                        <div class="plugin-tag">
+                                            <MudIcon Icon="@(LoaderSeeder.Loaders[loader - 1].Icon)" Size="Size.Small" />
+                                            <b>@LoaderSeeder.Loaders[loader - 1].Name</b>
+                                        </div>
+                                    }
+                                    @foreach (var category in Plugin.Categories)
+                                    {
+                                        <div class="plugin-tag">
+                                            <MudIcon Icon="@CategorySeeder.Categories[category - 1].Icon" Size="Size.Small" />
+                                            @CategorySeeder.Categories[category - 1].Name
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="padding: 25px 25px 25px 0px; width: 256px;">
+                            <div style="text-align: right; background-color: #262624; width: 231px; height: 103px; padding-top: 15px; padding-bottom: 15px; padding-right: 15px; border-radius: 0px 15px 15px 0px;">
+                                <div>
+                                    <img width="120px" style="background-color: transparent;" src="https://img.shields.io/github/downloads/@(Plugin.AuthorName)/@(Plugin.Name)/total?style=for-the-badge&label=Downloads&labelColor=262624&color=262624" />
+                                </div>
+                                <div style="margin-bottom: 5%">
+                                    <img width="110px" style="background-color: transparent;" src="https://img.shields.io/github/stars/@(Plugin.AuthorName)/@(Plugin.Name)?style=for-the-badge&label=Stars&labelColor=262624&color=262624" />
+                                </div>
+                                <div style="font-size: 11px; padding-right: 7px">
+                                    Updated @(Plugin.UpdatedOn.Humanize())
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </MudItem>
+    </MudGrid>
+    <MudSpacer />
+    <MudTabs Elevation="2" Rounded="true" Class="my-6" Color="Color.Dark" PanelClass="pa-6" ApplyEffectsToContainer="true">
+        <MudTabPanel Icon="@Icons.Material.Filled.Api" Text="Description" BadgeColor="Color.Error">
+            <MudMarkdown Value="@Plugin.Description" CodeBlockTheme="CodeBlockTheme.DraculaBase16" />
+        </MudTabPanel>
+        <MudTabPanel Icon="@Icons.Material.Filled.FilePresent" Text="Files" BadgeData="@Plugin.Files.Count" Disabled="@(Plugin.SupportedLoaders.Count == 0)" BadgeColor="Color.Error">
+            <MudTabs Outlined="true" ActivePanelIndexChanged="@ActiveLoaderChanged" Color="Color.Dark">
+                @foreach(var loader in Plugin.SupportedLoaders)
+                {
+                    <MudTabPanel Icon="@Icons.Material.Filled.Downloading" BadgeData="@Plugin.Files.Where(x => x.LoaderFiles.ContainsKey(loader)).Count()" Text="@loader" BadgeColor="Color.Primary" />
+                }
+            </MudTabs>
+            <div class="pa-4">
+                <MudTable T="LoaderFileView" ServerData="@(new Func<TableState, Task<TableData<LoaderFileView>>>(ServerReload))"
+                          Dense="true" Hover="true" @ref="filesTable">
+                    <ColGroup>
+                        <col style="width: 49%;">
+                        <col style="width: 8%;">
+                        <col style="width: 8%;">
+                        <col style="width: 13%;">
+                        <col style="width: 12%;">
+                        <col style="width: 14%;">
+                    </ColGroup>
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortLabel="Filename" T="LoaderFileView">File name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortLabel="Size" T="LoaderFileView">Size</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortLabel="Version" T="LoaderFileView">Version</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortLabel="SLVersion" T="LoaderFileView">SCPSL Version</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortLabel="Uploaded" T="LoaderFileView" InitialDirection="SortDirection.Descending">Uploaded</MudTableSortLabel></MudTh>
+                        <MudTh/>
+                    </HeaderContent>
+                    <NoRecordsContent>
+                        <MudText Align="Align.Center">
+                            No files found.
+                        </MudText>
+                    </NoRecordsContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="File name">
+                            @(context.Name) - @(context.Version)
+                            <MudChip OnClick="@(() => OpenDependencies(context))" Color="Color.Dark">+ &nbsp;<b>@(context.Dependencies.Count)</b>&nbsp;dependencies</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Size">@(ByteSize.FromBytes(context.Size))</MudTd>
+                        <MudTd DataLabel="Version">@(context.Version)</MudTd>
+                        <MudTd DataLabel="SLVersion">@(context.GameVersion)</MudTd>
+                        <MudTd DataLabel="Uploaded"><MudChip Label="true" Color="Color.Dark" Size="Size.Small">@(context.UpdatedAt)</MudChip></MudTd>
+                        <MudTd Style="overflow: hidden">
+                            <MudTooltip Text="Download">
+                                <MudIconButton Icon="@Icons.Material.Filled.Download" Href="@context.Url" Color="Color.Primary"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Changelogs">
+                                <MudIconButton Icon="@Icons.Material.Filled.Info" OnClick="@(() => OpenChangelogs(context))" Color="Color.Success"></MudIconButton>
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <ChildRowContent>
+                        @if (context.ShowDetails)
+                        {
+                            <MudTr>
+                                <td colspan="4">
+                                    <MudCard Elevation="0">
+                                        <MudCardHeader>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.body1">Dependencies</MudText>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent Class="pa-0">
+                                            <MudTable Items="@context.Dependencies" Context="DependencyContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                                <ColGroup>
+                                                    <col />
+                                                    <col />
+                                                </ColGroup>
+                                                <HeaderContent>
+                                                    <MudTh>Dependency</MudTh>
+                                                    <MudTh>Version</MudTh>
+                                                </HeaderContent>
+                                                <RowTemplate>
+                                                    <MudTd DataLabel="Dependency">@DependencyContext.Key</MudTd>
+                                                    <MudTd DataLabel="Version">@DependencyContext.Value.AssemblyVersion</MudTd>
+                                                </RowTemplate>
+                                            </MudTable>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </td>
+                            </MudTr>
+                        }
+                    </ChildRowContent>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            </div>
+        </MudTabPanel>
+        @if (Plugin.IsOwner)
+        {
+            <MudTabPanel Icon="@Icons.Material.Filled.Settings" Text="Settings" BadgeColor="Color.Error">
+                <MudPaper>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText>
+                                Edit plugin
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudCardContent Class="pa-4">
+                            <MudGrid>
+                                <MudItem xs="12" md="12">
+                                    @foreach (var category in CategorySeeder.Categories)
+                                    {
+                                            <MudText>@(category.Name)</MudText>
+                                    }
+                                    <MudSelect T="CategoryInfo" @bind-Value="_selectedCategory" @bind-SelectedValues="_selectedCategories" MultiSelectionTextFunc="SelectionFunc" Label="Select category." MultiSelection="true">
+                                        @foreach (var category in CategorySeeder.Categories)
+                                        {
+                                            <MudSelectItem T="CategoryInfo" Value="@category">
+                                                <MudText>@(category.Name)</MudText>
+                                            </MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="12">
+                                    <MudTextField @bind-Value="Plugin.Description" Label="Description" Variant="Variant.Text" Lines="60"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" md="12">
+                                    <MudTextField @bind-Value="Plugin.ShortDescription" Label="Short Description" Variant="Variant.Text" Lines="1"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" md="12">
+                                    <MudTextField @bind-Value="Plugin.ImageURL" Label="Image URL" Variant="Variant.Text"></MudTextField>
+                                </MudItem>   
+                                <MudItem xs="12" md="12">
+                                    <MudButton HtmlTag="label"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Success"
+                                               OnClick="@(async () => await SavePlugin())"
+                                               StartIcon="@Icons.Filled.Save">
+                                        Save
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCardContent>
+                </MudPaper>
+                <br />
+                <br />
+                <MudPaper>
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText>
+                                Delete plugin
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudCardContent Class="pa-4">
+                            <MudGrid>
+                                <MudItem xs="12" md="12">
+                                    <MudText>Retype plugin name "<code>@(Plugin.Name)</code>" to delete from website.</MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="12">
+                                    <MudTextField @bind-Value="_retypePlugin" Label="Confirm plugin Name" Variant="Variant.Text"></MudTextField>
+                                </MudItem>
+                                <MudItem xs="12" md="12">
+                                    <MudButton HtmlTag="label"
+                                               Variant="Variant.Filled"
+                                               Color="Color.Error"
+                                               OnClick="@(async () => await DeletePlugin())"
+                                               StartIcon="@Icons.Filled.Delete"
+                                               Disabled="@(_retypePlugin != Plugin.Name)">
+                                        Delete
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCardContent>
+                </MudPaper>
+            </MudTabPanel>
+        }
+    </MudTabs>
+</div>

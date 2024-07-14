@@ -1,0 +1,182 @@
+﻿@page "/"
+@using Humanizer
+@using PluginsWebsite.Core.Seeders
+@using PluginsWebsite.Core.Views
+
+<PageTitle>Plugins</PageTitle>
+
+<style>
+    .content {
+        display: flex;
+        margin-left: 5%;
+        margin-right: 15%;
+    }
+
+    .plugins {
+        flex: 1;
+        padding-left: 15px;
+    }
+
+    .sidebar {
+        background-color: #262624;
+        height: 800px;
+        width: 25%;
+        max-width: 300px;
+        border-radius: 15px;
+    }
+
+    .category {
+        display: flex;
+        height: 35px;
+        width: 100%;
+    }
+
+    .plugin-title {
+        display: inline-block;
+        white-space: nowrap;
+        height: 32px;
+        font-size: 20px;
+    }
+
+    .plugin-desc {
+        overflow: hidden;
+        white-space: pre-line;
+        text-overflow: ellipsis;
+        height: 35%;
+        margin-left: 25px;
+    }
+
+    .plugin-tags {
+        text-overflow: ellipsis;
+        height: 16px;
+        margin-left: 25px;
+        margin-right: 25px;
+    }
+
+    .plugin-tag {
+        width: 350px;
+        margin-right: 5px;
+        border-radius: 15px;
+        display: inline;
+    }
+
+    .nwapi {
+        background: url(images/nwapi.png);
+        background-size: contain;
+    }
+
+    .exiled {
+        background: url(images/exiled.png);
+        background-size: contain;
+    }
+</style>
+
+<div class="content">
+    <div class="sidebar">
+        <h2 style="text-align: center; padding-top: 15px;">Categories</h2>
+        <div style="padding-right: 15px; padding-left: 5px;">
+            <MudTreeView Items="Categories" MultiSelection="true" @bind-SelectedValues="SelectedCategories">
+                <ItemTemplate>
+                    <MudTreeViewItem Value="@context" Expanded="false" 
+                                     Icon="@context.Icon" Text="@context.Name" EndText="@context.Amount.ToString()" />
+                </ItemTemplate>
+            </MudTreeView>
+        </div>
+        <h2 style="text-align: center; padding-top: 15px;">Loaders</h2>
+        <div style="padding-right: 15px; padding-left: 5px;">
+            <MudTreeView Items="Loaders" MultiSelection="true" @bind-SelectedValues="SelectedLoaders">
+                <ItemTemplate>
+                    <MudTreeViewItem Value="@context" Expanded="false"
+                                     Icon="@context.Icon" Text="@context.Name" EndText="@context.Amount.ToString()" />
+                </ItemTemplate>
+            </MudTreeView>
+        </div>
+    </div>
+
+    <div class="plugins">
+        <MudTable ServerData="@(new Func<TableState, Task<TableData<PluginItemView>>>(ServerReload))"
+                  Elevation="0"
+                  Style="background-color: transparent"
+                  @ref="table" Class="plugin-list">
+            <ToolBarContent>
+                <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <NoRecordsContent>
+                <MudText Align="Align.Center">
+                    No results for "<code>@(searchString)</code>".
+                </MudText>
+            </NoRecordsContent>
+            <RowTemplate>
+                <a href="@("/plugin/" + context.Id)">
+                    <table style="width: 100%; height: 128px">
+                        <tr>
+                            <th style="width: 128px" />
+                            <th style="width: 100%;" />
+                            <th style="width: 256px;" />
+                        </tr>
+                       <tr>
+                           <td>
+                                <div style="padding: 25px 0px 25px 25px;">
+                                    <img style="border-radius: 15%" height="103px" width="103px" src="@context.ImageURL" />
+                                </div>
+                           </td>
+                           <td>
+                                <div style="padding: 25px 0px 25px 25px;">
+                                    <div style="background-color: #262624; border-radius: 15px 0px 0px 15px; height: 103px">
+                                        <div class="plugin-title">
+                                            <h2 style="display: inline; margin-left: 25px;">@context.Name</h2>
+                                            &nbsp; by&nbsp;
+                                            <a href="/author/@context.AuthorName" style="display: inline; text-decoration: underline">@context.AuthorName</a>
+                                        </div>
+                                        <div class="plugin-desc">
+                                            @context.ShortDescription
+                                        </div>
+                                        <div class="plugin-tags">
+                                            @*<div class="plugin-tag">
+                                                <img width="16px" height="16px" src="https://northwood-studios.github.io/NwPluginAPI/images/logo.jpg" />
+                                                <b>NW Plugin API & Exiled</b>
+                                            </div>*@
+                                            @foreach (var loader in context.Loaders)
+                                            {
+                                                <div class="plugin-tag">
+                                                    <MudIcon Icon="@(LoaderSeeder.Loaders[loader - 1].Icon)" Size="Size.Small" />
+                                                    <b>@LoaderSeeder.Loaders[loader - 1].Name</b>
+                                                </div>
+                                            }
+                                            @foreach(var category in context.Categories)
+                                            {
+                                                <div class="plugin-tag">
+                                                    <MudIcon Icon="@CategorySeeder.Categories[category - 1].Icon" Size="Size.Small" />
+                                                    @CategorySeeder.Categories[category - 1].Name
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                               </div>
+                           </td>
+                           <td>
+                                <div style="padding: 25px 25px 25px 0px; width: 256px;">
+                                    <div style="text-align: right; background-color: #262624; width: 231px; height: 103px; padding-top: 15px; padding-bottom: 15px; padding-right: 15px; border-radius: 0px 15px 15px 0px;">
+                                        <div>
+                                            <img width="120px" style="background-color: transparent;" src="https://img.shields.io/github/downloads/@(context.AuthorName)/@(context.Name)/total?style=for-the-badge&label=Downloads&labelColor=262624&color=262624" />
+                                        </div>
+                                        <div style="margin-bottom: 5%">
+                                            <img width="110px" style="background-color: transparent;" src="https://img.shields.io/github/stars/@(context.AuthorName)/@(context.Name)?style=for-the-badge&label=Stars&labelColor=262624&color=262624" />
+                                        </div>
+                                        <div style="font-size: 11px; padding-right: 7px">
+                                            Updated @(context.UpdatedOn.Humanize())
+                                        </div>
+                                    </div>
+                                </div>
+                           </td>
+                       </tr>
+                    </table>
+                </a>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager HideRowsPerPage="true"  HorizontalAlignment="HorizontalAlignment.Center" />
+            </PagerContent>
+        </MudTable>
+    </div>
+</div>

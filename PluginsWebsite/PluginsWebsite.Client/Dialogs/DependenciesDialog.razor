@@ -1,0 +1,21 @@
+﻿@using PluginsWebsite.Core.Views
+<MudDialog>
+    <DialogContent>
+        <MudContainer Style="max-height: 300px; overflow-y: scroll">
+            @foreach(var dep in Content)
+            {
+                <MudChip Style="Width: 99%" Color="Color.Dark">@dep.Key - @(dep.Value.AssemblyVersion)</MudChip>
+            }
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Dictionary<string, DependencyView> Content { get; set; }
+    
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+}

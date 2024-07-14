@@ -1,0 +1,20 @@
+﻿<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.FormatAlignCenter">Plugins</MudNavLink>
+
+	<MudPaper Class="d-flex" Style="width: 100%; height: 3px; margin-bottom: 5px; margin-top: 5px;" Outlined="false" />
+
+	<AuthorizeView>
+		<Authorized>
+			<MudNavLink Href="/publish" Icon="@Icons.Material.TwoTone.Upload">Publish plugin</MudNavLink>
+			<MudPaper Class="d-flex" Style="width: 100%; height: 3px; margin-bottom: 5px; margin-top: 5px;" Outlined="false" />
+			<MudNavGroup Title="@context.User.Identity?.Name" mat Icon="@Icons.Material.TwoTone.AccountBox">
+				<MudNavLink Href="/Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.TwoTone.SettingsApplications">Manage</MudNavLink>
+				<MudNavLink Href="/logout" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.TwoTone.SettingsPower" IconColor="Color.Error">Logout</MudNavLink>
+			</MudNavGroup>
+		</Authorized>
+		<NotAuthorized>
+			<MudNavLink Href="login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.TwoTone.Send">Login</MudNavLink>
+		</NotAuthorized>
+	</AuthorizeView>
+
+</MudNavMenu>
