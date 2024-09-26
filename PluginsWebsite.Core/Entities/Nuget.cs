@@ -2,7 +2,7 @@
 
 namespace PluginsWebsite.Core.Entities
 {
-    public class Nuget
+    public class NuGet
     {
         [Key]
         public int Id { get; set; }

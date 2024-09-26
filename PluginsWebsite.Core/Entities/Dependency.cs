@@ -20,6 +20,6 @@ namespace PluginsWebsite.Core.Entities
         public Plugin Plugin { get; set; }
 
         public int? NugetId { get; set; }
-        public Nuget Nuget { get; set; }
+        public NuGet Nuget { get; set; }
     }
 }

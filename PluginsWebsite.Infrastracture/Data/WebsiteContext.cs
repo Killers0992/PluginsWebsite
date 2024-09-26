@@ -21,6 +21,6 @@ namespace PluginsWebsite.Infrastracture.Data
         public DbSet<LoaderFile> LoaderFiles { get; set; }
         public DbSet<Dependency> Dependencies { get; set; }
         public DbSet<GameVersion> GameVersions { get; set; }
-        public DbSet<Nuget> Nugets { get; set; }
+        public DbSet<NuGet> Nugets { get; set; }
     }
 }

@@ -227,7 +227,7 @@ namespace PluginsWebsite.Infrastracture.Services
                                 {
                                     if (request.IsSuccessStatusCode)
                                     {
-                                        nuget = new Nuget()
+                                        nuget = new NuGet()
                                         {
                                             Name = nugetName,
                                             Version = dependency.Value.Version,
@@ -275,7 +275,6 @@ namespace PluginsWebsite.Infrastracture.Services
 
         public static string GetMD5checksum(byte[] inputData)
         {
-
             //convert byte array to stream
             System.IO.MemoryStream stream = new System.IO.MemoryStream();
             stream.Write(inputData, 0, inputData.Length);
